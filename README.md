@@ -1,3 +1,5 @@
+https://store-ratings-web-t0ft.onrender.com/    -DEPLOYED/ LIVE DEMO
+
 # Store Rating Platform
 
 Customers rate registered stores from 1 to 5. One login system, three roles, different
