@@ -1,0 +1,23 @@
+name: store-rating-dev
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: srp_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: srp_user
+      POSTGRES_PASSWORD: srp_password
+      POSTGRES_DB: store_ratings
+    ports:
+      - "5432:5432"
+    volumes:
+      - srp_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U srp_user -d store_ratings"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  srp_pgdata:

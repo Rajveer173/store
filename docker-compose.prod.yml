@@ -1,0 +1,51 @@
+name: store-rating-prod
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: srp_prod_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-srp_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-srp_password}
+      POSTGRES_DB: ${POSTGRES_DB:-store_ratings}
+    volumes:
+      - srp_prod_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-srp_user} -d ${POSTGRES_DB:-store_ratings}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./server
+    container_name: srp_prod_api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:8080}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-srp_user}:${POSTGRES_PASSWORD:-srp_password}@db:5432/${POSTGRES_DB:-store_ratings}
+      DATABASE_SSL: "false"
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-before-any-real-deployment}
+      JWT_EXPIRES_IN: 8h
+      BCRYPT_ROUNDS: 12
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@storeratings.com}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-Admin@12345}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./client
+    container_name: srp_prod_web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - api
+
+volumes:
+  srp_prod_pgdata:
